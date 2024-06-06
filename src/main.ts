@@ -3,6 +3,7 @@ import bodyParser from "body-parser";
 import morgan from "morgan";
 import { UserRouting } from "./routings";
 import { ThreadRouting } from "./routings/thread";
+import { CommonRouting } from "./routings/common";
 
 const server = express();
 const router = express.Router();
@@ -14,6 +15,8 @@ server.use(morgan("dev"));
 UserRouting(router);
 // 2. Thread
 ThreadRouting(router);
+// 3. Common
+CommonRouting(router);
 
 server.use("/api", router);
 
