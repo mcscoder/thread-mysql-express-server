@@ -3,7 +3,7 @@ import { ThreadRepo } from "../repositories";
 
 export function ThreadRouting(server: Router) {
   // 2.1. Get a Thread by `thread_id`
-  server.get("/threads/:threadId", async (req, res) => {
+  server.get("/thread/:threadId", async (req, res) => {
     const currentUserId = Number(req.get("currentUserId"));
     const threadId = Number(req.params.threadId);
 
@@ -17,8 +17,12 @@ export function ThreadRouting(server: Router) {
       res.sendStatus(404);
     }
   });
+
   // 2.2. Get a random list of Thread posts
-  // server.get("/threads/random", async (req, res) => {
-  //   const currentUserId = Number(req.get("currentUserId"));
-  // });
+  server.get("/threads/random", async (req, res) => {
+    const currentUserId = Number(req.get("currentUserId"));
+    console.log(currentUserId);
+    const threadResponses = await ThreadRepo.getRandomThreads(currentUserId);
+    res.json(threadResponses);
+  });
 }

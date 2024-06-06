@@ -4,6 +4,7 @@ import {
   ThreadResponse,
   ThreadType,
 } from "../types/thread";
+import { UserResponse } from "../types/user";
 import { CommonUtils } from "../utils";
 import { UserRepo } from "./user";
 
@@ -86,7 +87,10 @@ export class ThreadRepo {
       // Retrieve images, user, favorite count, favorite state, reply count
       const [data2, data3, data4, data5, data6] = await Promise.all([
         db.query(sql2, [threadId]),
-        UserRepo.getUserById(currentUserId, targetUserId),
+        UserRepo.getUserById(
+          currentUserId,
+          targetUserId
+        ) as Promise<UserResponse>,
         db.query(sql4, [threadId]),
         db.query(sql5, [threadId, currentUserId]),
         db.query(sql6, [threadType, threadId]),
@@ -131,17 +135,42 @@ export class ThreadRepo {
   }
 
   // 2.2. Get a random list of Thread posts
-  // static async getRandomThreads(currentUserId: number) {
-  //   /*
-  //   What this SQL statement does?
-  //   1. Select all Threads
-  //   */
-  //   const sql = `
-  //     SELECT thread.thread_id FROM thread
-  //     LEFT JOIN user_watched_thread ON user_watched_thread.user_id = ? AND user_watched_thread.thread_id = thread.thread_id
-  //     WHERE thread.type = 0 AND user_watched_thread.thread_id IS NULL
-  //     ORDER BY RAND()
-  //     LIMIT 15;
-  //   `;
-  // }
+  static async getRandomThreads(
+    currentUserId: number
+  ): Promise<ThreadResponse[]> {
+    /*
+    This SQL statement performs the following tasks:
+    1. Selects all threads that are unwatched by the user.
+    2. Randomizes the order of these threads.
+    3. Returns a list of `thread_id`s.
+    */
+    type ResultType = {
+      thread_id: number;
+    };
+    const sql = `
+      SELECT thread.thread_id FROM thread
+      LEFT JOIN user_watched_thread ON user_watched_thread.user_id = ? AND user_watched_thread.thread_id = thread.thread_id
+      WHERE thread.type = 0 AND user_watched_thread.thread_id IS NULL
+      ORDER BY RAND()
+      LIMIT 15;
+    `;
+    try {
+      const data = await db.query(sql, [currentUserId]);
+      const results = data[0] as ResultType[];
+
+      const threadResponses: ThreadResponse[] = await Promise.all(
+        results.map(
+          ({ thread_id }) =>
+            this.getThreadById(
+              currentUserId,
+              thread_id
+            ) as Promise<ThreadResponse>
+        )
+      );
+      return threadResponses;
+    } catch (error) {
+      console.log(error);
+    }
+    return [];
+  }
 }
