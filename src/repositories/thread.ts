@@ -70,7 +70,7 @@ export class ThreadRepo {
     `;
 
     try {
-      // 1. Thread data
+      // Retrieve Thread
       const data1 = await db.query(sql1, [threadId]);
       const results1 = data1[0] as Result1Type[];
 
@@ -78,49 +78,35 @@ export class ThreadRepo {
       if (results1.length == 0) {
         return null;
       }
-      const threadData = results1[0];
 
-      // 2. Thread images data
-      const data2 = await db.query(sql2, [threadId]);
-      const results2 = data2[0] as Result2Type[];
+      const threadInfo = results1[0];
+      // Id of Thread owner
+      const targetUserId = threadInfo.user_id;
 
-      const threadImagesData = results2;
+      // Retrieve images, user, favorite count, favorite state, reply count
+      const [data2, data3, data4, data5, data6] = await Promise.all([
+        db.query(sql2, [threadId]),
+        UserRepo.getUserById(currentUserId, targetUserId),
+        db.query(sql4, [threadId]),
+        db.query(sql5, [threadId, currentUserId]),
+        db.query(sql6, [threadType, threadId]),
+      ]);
 
-      // Put all retrieved Thread data into an object
+      const threadImages = data2[0] as Result2Type[];
+      const userResponse = data3!;
+      const favoriteCount = Object.values((data4[0] as Result4Type[])[0])[0];
+      const isFavorited =
+        Object.values((data5[0] as Result5Type[])[0])[0] !== 0;
+      const replyCount = Object.values((data6[0] as Result6Type[])[0])[0];
+
+      // Thread content response object
       const threadContentResponse: ThreadContentResponse = {
-        threadId: threadData.thread_id,
-        text: threadData.text,
-        imageUrls: threadImagesData.map(({ url }) => url),
-        createdAt: CommonUtils.isoToTimeStamp(threadData.create_at),
+        threadId: threadInfo.thread_id,
+        text: threadInfo.text,
+        imageUrls: threadImages.map(({ url }) => url),
+        createdAt: CommonUtils.isoToTimeStamp(threadInfo.create_at),
         updatedAt: 0,
       };
-
-      // 3. User data
-      const targetUserId = threadData.user_id;
-
-      // It would never null because the `user_id` was take from the database
-      const userResponse = (await UserRepo.getUserById(
-        currentUserId,
-        targetUserId
-      ))!;
-
-      // 4. Thread favorite count
-      const data4 = await db.query(sql4, [threadId]);
-      const results4 = data4[0] as Result4Type[];
-
-      const favoriteCount = Object.values(results4[0])[0];
-
-      // 5. Favorite state
-      const data5 = await db.query(sql5, [threadId, currentUserId]);
-      const results5 = data5[0] as Result5Type[];
-
-      const isFavorited = Object.values(results5[0])[0] !== 0;
-
-      // 6. Thread comment|reply count
-      const data6 = await db.query(sql6, [threadType, threadId]);
-      const results6 = data6[0] as Result6Type[];
-
-      const replyCount = Object.values(results6[0])[0];
 
       // ----- Put all retrieved data into a final object
       const threadResponse: ThreadResponse = {
@@ -143,4 +129,19 @@ export class ThreadRepo {
     }
     return null;
   }
+
+  // 2.2. Get a random list of Thread posts
+  // static async getRandomThreads(currentUserId: number) {
+  //   /*
+  //   What this SQL statement does?
+  //   1. Select all Threads
+  //   */
+  //   const sql = `
+  //     SELECT thread.thread_id FROM thread
+  //     LEFT JOIN user_watched_thread ON user_watched_thread.user_id = ? AND user_watched_thread.thread_id = thread.thread_id
+  //     WHERE thread.type = 0 AND user_watched_thread.thread_id IS NULL
+  //     ORDER BY RAND()
+  //     LIMIT 15;
+  //   `;
+  // }
 }
