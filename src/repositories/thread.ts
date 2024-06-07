@@ -212,4 +212,29 @@ export class ThreadRepo {
       console.log(error);
     }
   }
+
+  // 2.4. Favorite or unfavorite a Thread
+  static async favoriteThread(
+    currentUserId: number,
+    threadId: number,
+    isFavorited: boolean
+  ) {
+    try {
+      if (isFavorited) {
+        // Favorite a Thread
+        await db.query(
+          "INSERT INTO user_favorite_thread (user_id, thread_id) VALUES (?, ?)",
+          [currentUserId, threadId]
+        );
+      } else {
+        // Unfavorite a Thread
+        await db.query(
+          "DELETE FROM user_favorite_thread WHERE user_id = ? AND thread_id = ?",
+          [currentUserId, threadId]
+        );
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
 }

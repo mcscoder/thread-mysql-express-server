@@ -22,7 +22,7 @@ export function ThreadRouting(server: Router) {
   // 2.2. Get a random list of Thread posts
   server.get("/threads/random", async (req, res) => {
     const currentUserId = Number(req.get("currentUserId"));
-    console.log(currentUserId);
+
     const threadResponses = await ThreadRepo.getRandomThreads(currentUserId);
     res.json(threadResponses);
   });
@@ -34,5 +34,16 @@ export function ThreadRouting(server: Router) {
 
     await ThreadRepo.postThread(currentUserId, request);
     res.sendStatus(201);
+  });
+
+  // 2.4. Favorite or unfavorite a Thread
+  server.get("/thread/favorite/:threadId/:isFavorited", async (req, res) => {
+    const currentUserId = Number(req.get("currentUserId"));
+    const threadId = Number(req.params.threadId);
+    const isFavorited = Number(req.params.isFavorited) !== 0;
+
+    await ThreadRepo.favoriteThread(currentUserId, threadId, isFavorited);
+
+    res.sendStatus(200);
   });
 }
