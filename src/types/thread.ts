@@ -34,14 +34,18 @@ export type ThreadOverviewResponse = {
   };
 };
 
-export type ThreadContentResponse = {
+export type Thread = {
   threadId: number;
   text: string;
   imageUrls: string[];
 } & DateTime;
+
+export type ThreadContentResponse = Thread;
 
 export type ThreadResponse = {
   content: ThreadContentResponse;
   user: UserResponse;
   overview: ThreadOverviewResponse;
 };
+
+export type PostThreadRequest = Pick<Thread, "text" | "imageUrls">;

@@ -24,16 +24,18 @@ export type UserFavoriteThreadEntity = DateTimeEntity & {
   thread_id: number;
 };
 
-export type UserResponse = {
+export type User = {
   userId: number;
   username: string;
   firstName: string;
   lastName: string;
   imageUrl: string;
+};
+
+export type UserResponse = User & {
   isFollowing: boolean;
 };
 
-export type UserLoginRequest = {
-  username: string;
+export type UserLoginRequest = Pick<User, "username"> & {
   password: string;
 };

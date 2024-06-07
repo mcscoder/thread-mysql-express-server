@@ -25,4 +25,8 @@ export function ThreadRouting(server: Router) {
     const threadResponses = await ThreadRepo.getRandomThreads(currentUserId);
     res.json(threadResponses);
   });
+
+  // 2.3. Post a Thread
+  // server.post("/thread/post", async (req, res) => {
+  // })
 }
