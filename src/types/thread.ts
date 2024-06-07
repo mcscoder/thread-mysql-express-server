@@ -1,4 +1,4 @@
-import { DateTime, DateTimeEntity } from "./common";
+import { DateTimeEntity, DateTimeProp } from "./common";
 import { UserResponse } from "./user";
 
 export type ThreadEntity = DateTimeEntity & {
@@ -38,7 +38,7 @@ export type Thread = {
   threadId: number;
   text: string;
   imageUrls: string[];
-} & DateTime;
+} & DateTimeProp;
 
 export type ThreadContentResponse = Thread;
 

@@ -6,3 +6,6 @@ export type DateTime = {
   createdAt: number;
   updatedAt: number;
 };
+export type DateTimeProp = {
+  dateTime: DateTime;
+};

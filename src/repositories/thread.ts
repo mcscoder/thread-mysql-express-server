@@ -111,8 +111,10 @@ export class ThreadRepo {
         threadId: threadInfo.thread_id,
         text: threadInfo.text,
         imageUrls: threadImages.map(({ url }) => url),
-        createdAt: CommonUtils.isoToTimeStamp(threadInfo.create_at),
-        updatedAt: 0,
+        dateTime: {
+          createdAt: CommonUtils.isoToTimeStamp(threadInfo.create_at),
+          updatedAt: 0,
+        },
       };
 
       // ----- Put all retrieved data into a final object
