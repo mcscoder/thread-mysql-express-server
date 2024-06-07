@@ -48,4 +48,7 @@ export type ThreadResponse = {
   overview: ThreadOverviewResponse;
 };
 
-export type PostThreadRequest = Pick<Thread, "text" | "imageUrls">;
+export type PostThreadRequest = Pick<Thread, "text" | "imageUrls"> & {
+  type: number;
+  mainId: number | undefined;
+};

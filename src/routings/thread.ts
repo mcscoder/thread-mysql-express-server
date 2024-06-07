@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { ThreadRepo } from "../repositories";
+import { PostThreadRequest } from "../types/thread";
 
 export function ThreadRouting(server: Router) {
   // 2.1. Get a Thread by `thread_id`
@@ -27,6 +28,11 @@ export function ThreadRouting(server: Router) {
   });
 
   // 2.3. Post a Thread
-  // server.post("/thread/post", async (req, res) => {
-  // })
+  server.post("/thread/post", async (req, res) => {
+    const currentUserId = Number(req.get("currentUserId"));
+    const request: PostThreadRequest = req.body;
+
+    await ThreadRepo.postThread(currentUserId, request);
+    res.sendStatus(201);
+  });
 }

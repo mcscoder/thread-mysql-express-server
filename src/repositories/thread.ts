@@ -1,5 +1,7 @@
+import { ResultSetHeader } from "mysql2";
 import db from "../database/connection";
 import {
+  PostThreadRequest,
   ThreadContentResponse,
   ThreadResponse,
   ThreadType,
@@ -7,6 +9,7 @@ import {
 import { UserResponse } from "../types/user";
 import { CommonUtils } from "../utils";
 import { UserRepo } from "./user";
+import { ImageRepo } from "./image";
 
 export class ThreadRepo {
   // 2.1. Get a Thread by `thread_id`
@@ -172,5 +175,39 @@ export class ThreadRepo {
       console.log(error);
     }
     return [];
+  }
+
+  // 2.3. Post a Thread
+  static async postThread(currentUserId: number, request: PostThreadRequest) {
+    try {
+      const [[{ insertId: threadId }], imageIds] = await Promise.all([
+        // Insert Thread info
+        db.query<ResultSetHeader>(
+          "INSERT INTO thread (type, text, user_id) VALUES (?, ?, ?)",
+          [request.type, request.text, currentUserId]
+        ),
+        // Insert image urls
+        ImageRepo.insertImage(request.imageUrls),
+      ]);
+
+      await Promise.all([
+        // Create the relationships between Thread and images
+        ...imageIds.map(async (imageId) => {
+          db.query(
+            "INSERT INTO thread_image (thread_id, image_id) VALUES (?, ?)",
+            [threadId, imageId]
+          );
+        }),
+        // If `mainId` exist that means this is a comment|reply
+        // So we need to create a relationship between comment|reply to what it comment|reply to
+        request.mainId &&
+          db.query(
+            "INSERT INTO thread_reply (main_id, reply_id) VALUES (?, ?)",
+            [request.mainId, threadId]
+          ),
+      ]);
+    } catch (error) {
+      console.log(error);
+    }
   }
 }
