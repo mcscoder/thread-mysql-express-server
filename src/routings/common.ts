@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { commonPath } from "../constants";
 import multer from "multer";
+import { static as expressStatic } from "express";
 
 export function CommonRouting(server: Router) {
   // ------------------- Set up multer to handle file uploads
@@ -22,4 +23,7 @@ export function CommonRouting(server: Router) {
     );
     res.json(imageUrls);
   });
+
+  // Static public images
+  server.use("/public/images", expressStatic(commonPath.publicImage));
 }
