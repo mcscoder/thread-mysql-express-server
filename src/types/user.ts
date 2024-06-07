@@ -32,7 +32,8 @@ export type User = {
   imageUrl: string;
 };
 
-export type UserResponse = User & {
+export type UserResponse = {
+  user: User;
   isFollowing: boolean;
 };
 

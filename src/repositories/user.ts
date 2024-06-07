@@ -34,11 +34,13 @@ export class UserRepo {
       if (results.length > 0) {
         const user = results[0];
         const userResponse: UserResponse = {
-          userId: user.user_id,
-          username: user.username,
-          firstName: user.first_name,
-          lastName: user.last_name,
-          imageUrl: user.url,
+          user: {
+            userId: user.user_id,
+            username: user.username,
+            firstName: user.first_name,
+            lastName: user.last_name,
+            imageUrl: user.url,
+          },
           isFollowing: user.current_id !== null,
         };
         return userResponse;
