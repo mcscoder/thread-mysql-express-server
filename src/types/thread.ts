@@ -38,6 +38,7 @@ export type Thread = {
   threadId: number;
   text: string;
   imageUrls: string[];
+  type: number;
 } & DateTimeProp;
 
 export type ThreadContentResponse = Thread;

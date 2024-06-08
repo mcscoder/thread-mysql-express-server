@@ -23,12 +23,13 @@ export class ThreadRepo {
     type Result1Type = {
       thread_id: number;
       text: string;
+      type: number;
       create_at: string;
       user_id: number;
     };
 
     const sql1 = `
-      SELECT thread.thread_id, thread.text, thread.create_at, thread.user_id FROM thread
+      SELECT thread.thread_id, thread.text, thread.type, thread.create_at, thread.user_id FROM thread
       WHERE thread.thread_id = ?;
     `;
 
@@ -111,6 +112,7 @@ export class ThreadRepo {
         threadId: threadInfo.thread_id,
         text: threadInfo.text,
         imageUrls: threadImages.map(({ url }) => url),
+        type: threadInfo.type,
         dateTime: {
           createdAt: CommonUtils.isoToTimeStamp(threadInfo.create_at),
           updatedAt: 0,
