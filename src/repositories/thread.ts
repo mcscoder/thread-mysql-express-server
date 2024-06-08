@@ -4,19 +4,17 @@ import {
   PostThreadRequest,
   ThreadContentResponse,
   ThreadResponse,
-  ThreadType,
 } from "../types/thread";
 import { UserResponse } from "../types/user";
 import { CommonUtils } from "../utils";
-import { UserRepo } from "./user";
 import { ImageRepo } from "./image";
+import { UserRepo } from "./user";
 
 export class ThreadRepo {
   // 2.1. Get a Thread by `thread_id`
   static async getThreadById(
     currentUserId: number,
-    threadId: number,
-    threadType: ThreadType = ThreadType.POST
+    threadId: number
   ): Promise<ThreadResponse | null> {
     // ----- Retrieve Thread content data
     // 1. Retrieve Thread data
@@ -69,9 +67,7 @@ export class ThreadRepo {
       [key: string]: number;
     };
     const sql6 = `
-      SELECT COUNT(thread.thread_id) FROM thread
-      INNER JOIN thread_reply ON thread_reply.main_id = thread.thread_id
-      WHERE thread.type = ? AND thread.thread_id = ?;
+      SELECT COUNT(*) FROM thread_reply WHERE thread_reply.main_id = ?
     `;
 
     try {
@@ -97,7 +93,7 @@ export class ThreadRepo {
         ) as Promise<UserResponse>,
         db.query(sql4, [threadId]),
         db.query(sql5, [threadId, currentUserId]),
-        db.query(sql6, [threadType, threadId]),
+        db.query(sql6, [threadId]),
       ]);
 
       const threadImages = data2[0] as Result2Type[];
