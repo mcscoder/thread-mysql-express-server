@@ -55,4 +55,17 @@ export function ThreadRouting(server: Router) {
     const threadResponses = await ThreadRepo.getReplies(currentUserId, mainId);
     res.json(threadResponses);
   });
+
+  // 2.6. Get all Threads by `user_id`
+  server.get("/threads/user/:type", async (req, res) => {
+    const currentUserId = Number(req.get("currentUserId"));
+    const targetUserId = Number(req.get("targetUserId"));
+    const type = Number(req.params.type);
+    const threadResponses = await ThreadRepo.getThreadsByUserId(
+      currentUserId,
+      targetUserId,
+      type
+    );
+    res.json(threadResponses);
+  });
 }

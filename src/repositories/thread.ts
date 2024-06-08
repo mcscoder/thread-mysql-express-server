@@ -4,6 +4,7 @@ import {
   PostThreadRequest,
   ThreadContentResponse,
   ThreadResponse,
+  ThreadType,
 } from "../types/thread";
 import { UserResponse } from "../types/user";
 import { CommonUtils } from "../utils";
@@ -247,7 +248,7 @@ export class ThreadRepo {
       const replyIds = (
         await db.query<RowDataPacket[]>(
           ` SELECT thread_reply.reply_id FROM thread_reply
-          WHERE thread_reply.main_id = ?`,
+            WHERE thread_reply.main_id = ?`,
           [mainId]
         )
       )[0] as { reply_id: number }[];
@@ -258,6 +259,42 @@ export class ThreadRepo {
           threadResponses.push(reply!);
         })
       );
+    } catch (error) {
+      console.log(error);
+    }
+
+    return threadResponses;
+  }
+
+  // 2.6. Get all Posts|Comments|Replies by `user_id`
+  static async getThreadsByUserId(
+    currentUserId: number,
+    targetUserId: number,
+    type: ThreadType.POST
+  ): Promise<ThreadResponse[]> {
+    const threadResponses: ThreadResponse[] = [];
+
+    try {
+      const threadIds = (
+        await db.query<RowDataPacket[]>(
+          ` SELECT thread.thread_id FROM thread
+            WHERE thread.user_id = ? AND thread.type = ?`,
+          [targetUserId, type]
+        )
+      )[0] as { thread_id: number }[];
+
+      await Promise.all(
+        threadIds.map(async ({ thread_id }) => {
+          const threadResponse = await this.getThreadById(
+            currentUserId,
+            thread_id
+          );
+          threadResponses.push(threadResponse!);
+        })
+      );
+
+      // Sort newest to oldest
+      threadResponses.sort((a, b) => b.content.threadId - a.content.threadId);
     } catch (error) {
       console.log(error);
     }
