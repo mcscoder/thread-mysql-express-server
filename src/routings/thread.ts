@@ -46,4 +46,13 @@ export function ThreadRouting(server: Router) {
 
     res.sendStatus(200);
   });
+
+  // 2.5. Get a list of comments|replies by `main_id`
+  server.get("/thread/replies/:mainId", async (req, res) => {
+    const currentUserId = Number(req.get("currentUserId"));
+    const mainId = Number(req.params.mainId);
+
+    const threadResponses = await ThreadRepo.getReplies(currentUserId, mainId);
+    res.json(threadResponses);
+  });
 }

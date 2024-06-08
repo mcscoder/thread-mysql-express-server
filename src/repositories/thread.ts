@@ -1,4 +1,4 @@
-import { ResultSetHeader } from "mysql2";
+import { ResultSetHeader, RowDataPacket } from "mysql2";
 import db from "../database/connection";
 import {
   PostThreadRequest,
@@ -236,5 +236,34 @@ export class ThreadRepo {
     } catch (error) {
       console.log(error);
     }
+  }
+
+  // 2.5. Get a list of comments|replies by `main_id`
+  static async getReplies(
+    currentUserId: number,
+    mainId: number
+  ): Promise<ThreadResponse[]> {
+    const threadResponses: ThreadResponse[] = [];
+
+    try {
+      const replyIds = (
+        await db.query<RowDataPacket[]>(
+          ` SELECT thread_reply.reply_id FROM thread_reply
+          WHERE thread_reply.main_id = ?`,
+          [mainId]
+        )
+      )[0] as { reply_id: number }[];
+
+      await Promise.all(
+        replyIds.map(async ({ reply_id }) => {
+          const reply = await this.getThreadById(currentUserId, reply_id);
+          threadResponses.push(reply!);
+        })
+      );
+    } catch (error) {
+      console.log(error);
+    }
+
+    return threadResponses;
   }
 }
