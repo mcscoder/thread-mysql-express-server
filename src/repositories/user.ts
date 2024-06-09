@@ -1,3 +1,4 @@
+import { QueryError } from "mysql2";
 import db from "../database/connection";
 import { UserLoginRequest, UserResponse } from "../types/user";
 
@@ -75,5 +76,28 @@ export class UserRepo {
       console.log(error);
     }
     return null;
+  }
+
+  // 1.3. Follow or unfollow a User
+  static async follow(currentUserId: number, targetUserId: number) {
+    try {
+      // First, try to insert a new record into the user_follow table
+      await db.query(
+        "INSERT INTO user_follow (current_id, target_id) VALUES (?, ?)",
+        [currentUserId, targetUserId]
+      );
+    } catch (err) {
+      // If the record already exists (duplicate key error), it means the user is already following
+      if ((err as QueryError).code === "ER_DUP_ENTRY") {
+        // Unfollow the user by deleting the existing record
+        await db.query(
+          "DELETE FROM user_follow WHERE current_id = ? AND target_id = ?",
+          [currentUserId, targetUserId]
+        );
+      } else {
+        console.error("Error following/unfollowing user:", err);
+        throw err;
+      }
+    }
   }
 }
