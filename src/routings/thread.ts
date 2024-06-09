@@ -68,4 +68,13 @@ export function ThreadRouting(server: Router) {
     );
     res.json(threadResponses);
   });
+
+  // 2.7. Get all Replies by `user_id` included Main Thread
+  server.get("/threads/replies", async (req, res) => {
+    const currentUserId = Number(req.get("currentUserId"));
+    const targetUserId = Number(req.get("targetUserId"));
+    const mainThreadWithRepliesResponses =
+      await ThreadRepo.getMainThreadWithReplies(currentUserId, targetUserId);
+    res.json(mainThreadWithRepliesResponses);
+  });
 }

@@ -53,3 +53,8 @@ export type PostThreadRequest = Pick<Thread, "text" | "imageUrls"> & {
   type: number;
   mainId: number | undefined;
 };
+
+export type MainThreadWithReplies = {
+  main: ThreadResponse;
+  replies: ThreadResponse[];
+};

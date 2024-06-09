@@ -1,6 +1,7 @@
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import db from "../database/connection";
 import {
+  MainThreadWithReplies,
   PostThreadRequest,
   ThreadContentResponse,
   ThreadResponse,
@@ -300,5 +301,65 @@ export class ThreadRepo {
     }
 
     return threadResponses;
+  }
+
+  // 2.7. Get all Replies by `user_id` included Main Thread
+  static async getMainThreadWithReplies(
+    currentUserId: number,
+    targetUserId: number
+  ): Promise<MainThreadWithReplies[]> {
+    const mainThreadWithRepliesResponses: MainThreadWithReplies[] = [];
+
+    try {
+      const results = (
+        await db.query<RowDataPacket[]>(
+          ` SELECT thread_reply.main_id, thread_reply.reply_id FROM thread
+            INNER JOIN thread_reply ON thread.thread_id = thread_reply.reply_id
+            WHERE thread.type = 1 AND thread.user_id = ?`,
+          [targetUserId]
+        )
+      )[0] as { main_id: number; reply_id: number }[];
+
+      // Group reply which is has the same mainId
+      const idObject = results.reduce(
+        (prev: { [mainId: number]: number[] }, curr) => {
+          prev[curr.main_id] = prev[curr.main_id] || [];
+          prev[curr.main_id].push(curr.reply_id);
+          return prev;
+        },
+        {}
+      );
+
+      // Get all of main Thread id
+      const mainIds = Object.keys(idObject).map((value) => Number(value));
+
+      await Promise.all(
+        mainIds.map(async (mainId) => {
+          const replyIds = idObject[mainId];
+
+          const [mainThread, replies] = await Promise.all([
+            this.getThreadById(currentUserId, mainId),
+
+            Promise.all(
+              replyIds.map(async (replyId) => {
+                return (await this.getThreadById(currentUserId, replyId))!;
+              })
+            ),
+          ]);
+          replies.sort((a, b) => b.content.threadId - a.content.threadId);
+
+          mainThreadWithRepliesResponses.push({
+            main: mainThread!,
+            replies: replies,
+          });
+        })
+      );
+      mainThreadWithRepliesResponses.sort(
+        (a, b) => b.replies[0].content.threadId - a.replies[0].content.threadId
+      );
+    } catch (error) {
+      console.log(error);
+    }
+    return mainThreadWithRepliesResponses;
   }
 }
