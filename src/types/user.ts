@@ -1,4 +1,4 @@
-import { DateTimeEntity } from "./common";
+import { DateTimeEntity, DateTimeProp } from "./common";
 
 export type UserEntity = DateTimeEntity & {
   id: number;
@@ -47,3 +47,7 @@ export type UserResponse = {
 export type UserLoginRequest = Pick<User, "username"> & {
   password: string;
 };
+
+export type ActivityFollowResponse = {
+  user: UserResponse;
+} & DateTimeProp;

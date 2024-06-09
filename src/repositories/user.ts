@@ -1,6 +1,11 @@
 import { QueryError, RowDataPacket } from "mysql2";
 import db from "../database/connection";
-import { UserLoginRequest, UserResponse } from "../types/user";
+import {
+  ActivityFollowResponse,
+  UserLoginRequest,
+  UserResponse,
+} from "../types/user";
+import { CommonUtils } from "../utils";
 
 export class UserRepo {
   // 1.1. Get an User by `user_id`
@@ -112,5 +117,75 @@ export class UserRepo {
         throw err;
       }
     }
+  }
+
+  // 1.4. Get a list of user those who follow `target user`
+  static async getUserFollowers(
+    currentUserId: number,
+    targetUserId: number
+  ): Promise<ActivityFollowResponse[]> {
+    const activityFollows: ActivityFollowResponse[] = [];
+
+    try {
+      // Get user ids those who following `target user`
+      const userIdList = (
+        await db.query<RowDataPacket[]>(
+          "SELECT current_id, create_at FROM user_follow WHERE target_id = ?",
+          [targetUserId]
+        )
+      )[0] as { current_id: number; create_at: string }[];
+
+      await Promise.all(
+        userIdList.map(async ({ current_id: userId, create_at }) => {
+          const user = await this.getUserById(currentUserId, userId);
+          activityFollows.push({
+            user: user!,
+            dateTime: {
+              createdAt: CommonUtils.isoToTimeStamp(create_at),
+              updatedAt: 0,
+            },
+          });
+        })
+      );
+    } catch (error) {
+      console.log(error);
+    }
+
+    return activityFollows;
+  }
+
+  // 1.5. Get a list of users those who followed by `target user`
+  static async getUserFollowings(
+    currentUserId: number,
+    targetUserId: number
+  ): Promise<ActivityFollowResponse[]> {
+    const activityFollows: ActivityFollowResponse[] = [];
+
+    try {
+      // Get user ids those who followed by `target user`
+      const userIdList = (
+        await db.query<RowDataPacket[]>(
+          "SELECT target_id FROM user_follow WHERE current_id = ?",
+          [targetUserId]
+        )
+      )[0] as { target_id: number; create_at: string }[];
+
+      await Promise.all(
+        userIdList.map(async ({ target_id: userId, create_at }) => {
+          const user = await this.getUserById(currentUserId, userId);
+          activityFollows.push({
+            user: user!,
+            dateTime: {
+              createdAt: CommonUtils.isoToTimeStamp(create_at),
+              updatedAt: 0,
+            },
+          });
+        })
+      );
+    } catch (error) {
+      console.log(error);
+    }
+
+    return activityFollows;
   }
 }

@@ -38,4 +38,26 @@ export function UserRouting(server: Router) {
     await UserRepo.follow(currentUserId, targetUserId);
     res.sendStatus(204);
   });
+
+  // 1.4. Get a list of user those who follow `target user`
+  server.get("/user/followers", async (req, res) => {
+    const currentUserId = Number(req.get("currentUserId"));
+    const targetUserId = Number(req.get("targetUserId"));
+    const activityFollows = await UserRepo.getUserFollowers(
+      currentUserId,
+      targetUserId
+    );
+    res.json(activityFollows);
+  });
+
+  // 1.5. Get a list of users those who followed by `target user`
+  server.get("/user/followings", async (req, res) => {
+    const currentUserId = Number(req.get("currentUserId"));
+    const targetUserId = Number(req.get("targetUserId"));
+    const activityFollows = await UserRepo.getUserFollowings(
+      currentUserId,
+      targetUserId
+    );
+    res.json(activityFollows);
+  });
 }
