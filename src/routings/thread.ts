@@ -77,4 +77,11 @@ export function ThreadRouting(server: Router) {
       await ThreadRepo.getMainThreadWithReplies(currentUserId, targetUserId);
     res.json(mainThreadWithRepliesResponses);
   });
+
+  // 2.8. Get all comments that comments to current user's post
+  server.get("/threads/activity/replies", async (req, res) => {
+    const currentUserId = Number(req.get("currentUserId"));
+    const threadResponses = await ThreadRepo.getActivityReplies(currentUserId);
+    res.json(threadResponses);
+  });
 }

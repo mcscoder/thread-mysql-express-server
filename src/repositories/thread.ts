@@ -115,6 +115,7 @@ export class ThreadRepo {
           createdAt: CommonUtils.isoToTimeStamp(threadInfo.create_at),
           updatedAt: 0,
         },
+        mainId: undefined,
       };
 
       // ----- Put all retrieved data into a final object
@@ -361,5 +362,38 @@ export class ThreadRepo {
       console.log(error);
     }
     return mainThreadWithRepliesResponses;
+  }
+
+  // 2.8. Get all comments that comments to current user's post
+  static async getActivityReplies(
+    currentUserId: number
+  ): Promise<ThreadResponse[]> {
+    const threadResponses: ThreadResponse[] = [];
+
+    try {
+      const replyIds = (
+        await db.query<RowDataPacket[]>(
+          ` SELECT thread_reply.main_id, thread_reply.reply_id FROM thread
+            JOIN thread_reply on thread.thread_id = thread_reply.main_id
+            WHERE thread.user_id = ?`,
+          [currentUserId]
+        )
+      )[0] as { main_id: number; reply_id: number }[];
+
+      await Promise.all(
+        replyIds.map(async ({ main_id, reply_id }) => {
+          const threadResponse = await this.getThreadById(
+            currentUserId,
+            reply_id
+          );
+          threadResponse!.content.mainId = main_id;
+          threadResponses.push(threadResponse!);
+        })
+      );
+    } catch (error) {
+      console.log(error);
+    }
+    threadResponses.sort((a, b) => b.content.threadId - a.content.threadId);
+    return threadResponses;
   }
 }
