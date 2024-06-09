@@ -1,4 +1,4 @@
-import { QueryError } from "mysql2";
+import { QueryError, RowDataPacket } from "mysql2";
 import db from "../database/connection";
 import { UserLoginRequest, UserResponse } from "../types/user";
 
@@ -8,32 +8,40 @@ export class UserRepo {
     currentUserId: number,
     targetUserId: number
   ): Promise<UserResponse | null> {
-    type ResultType = {
-      user_id: number;
-      username: string;
-      first_name: string;
-      last_name: string;
-      url: string;
-      current_id: number | null;
-    };
-
-    const sql = `
-      SELECT user.user_id, user.username, user.first_name, user.last_name, image.url, user_follow.current_id FROM user
-      LEFT JOIN image ON image.image_id = user.user_id
-      LEFT JOIN user_follow ON user_follow.current_id = ? AND user_follow.target_id = ?
-      WHERE user.user_id = ?;
-    `;
-
     try {
-      const data = await db.query(sql, [
-        currentUserId,
-        targetUserId,
-        targetUserId,
+      const [userData, followCount] = await Promise.all([
+        (async () => {
+          const userData = (
+            await db.query<RowDataPacket[]>(
+              ` SELECT user.user_id, user.username, user.first_name, user.last_name, image.url, user_follow.current_id FROM user
+                LEFT JOIN image ON image.image_id = user.user_id
+                LEFT JOIN user_follow ON user_follow.current_id = ? AND user_follow.target_id = ?
+                WHERE user.user_id = ?;`,
+              [currentUserId, targetUserId, targetUserId]
+            )
+          )[0] as {
+            user_id: number;
+            username: string;
+            first_name: string;
+            last_name: string;
+            url: string;
+            current_id: number | null;
+          }[];
+          return userData[0];
+        })(),
+        (async () => {
+          const followCount = (
+            await db.query<RowDataPacket[]>(
+              "SELECT COUNT(*) FROM user_follow WHERE target_id = ?",
+              [targetUserId]
+            )
+          )[0] as { [key: string]: number }[];
+          return Number(Object.values(followCount[0])[0]);
+        })(),
       ]);
-      const results = data[0] as ResultType[];
 
-      if (results.length > 0) {
-        const user = results[0];
+      if (userData) {
+        const user = userData;
         const userResponse: UserResponse = {
           user: {
             userId: user.user_id,
@@ -42,7 +50,12 @@ export class UserRepo {
             lastName: user.last_name,
             imageUrl: user.url,
           },
-          isFollowing: user.current_id !== null,
+          overview: {
+            follow: {
+              isFollowing: user.current_id !== null,
+              count: followCount,
+            },
+          },
         };
         return userResponse;
       }

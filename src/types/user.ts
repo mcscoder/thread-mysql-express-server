@@ -32,9 +32,16 @@ export type User = {
   imageUrl: string;
 };
 
+export type UserOverview = {
+  follow: {
+    isFollowing: boolean;
+    count: number;
+  };
+};
+
 export type UserResponse = {
   user: User;
-  isFollowing: boolean;
+  overview: UserOverview;
 };
 
 export type UserLoginRequest = Pick<User, "username"> & {
