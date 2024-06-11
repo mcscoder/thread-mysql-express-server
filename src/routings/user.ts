@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { UserLoginRequest } from "../types/user";
+import { UserLoginRequest, UserRegisterRequest } from "../types/user";
 import { UserRepo } from "../repositories";
 
 export function UserRouting(server: Router) {
@@ -59,5 +59,17 @@ export function UserRouting(server: Router) {
       targetUserId
     );
     res.json(activityFollows);
+  });
+
+  // 1.6. Create new account
+  server.post("/user/register", async (req, res) => {
+    const request: UserRegisterRequest = req.body;
+    const userId = await UserRepo.createNewAccount(request);
+
+    if (userId) {
+      res.json(userId);
+    } else {
+      res.sendStatus(401);
+    }
   });
 }

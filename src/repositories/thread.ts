@@ -396,4 +396,47 @@ export class ThreadRepo {
     threadResponses.sort((a, b) => b.content.threadId - a.content.threadId);
     return threadResponses;
   }
+
+  // 2.9. Search Posts by text
+  static async getThreadsByText(
+    currentUserId: number,
+    searchText: string
+  ): Promise<ThreadResponse[]> {
+    const threadResponses: ThreadResponse[] = [];
+
+    try {
+      const threadIds = (
+        (
+          await db.query<RowDataPacket[]>(
+            ` SELECT thread_id FROM thread
+              WHERE MATCH(text) AGAINST(? IN NATURAL LANGUAGE MODE)`,
+            [searchText]
+          )
+        )[0] as { thread_id: number }[]
+      ).map(({ thread_id }) => thread_id);
+
+      await Promise.all(
+        threadIds.map(async (threadId) => {
+          const threadResponse = await this.getThreadById(
+            currentUserId,
+            threadId
+          );
+          threadResponses.push(threadResponse!);
+        })
+      );
+    } catch (error) {
+      console.log(error);
+    }
+
+    return threadResponses;
+  }
+
+  // 2.10. Delete a Thread
+  static async deleteThreadById(threadId: number) {
+    try {
+      await db.query("DELETE FROM thread WHERE thread_id = ?", [threadId]);
+    } catch (error) {
+      console.log(error);
+    }
+  }
 }

@@ -48,6 +48,13 @@ export type UserLoginRequest = Pick<User, "username"> & {
   password: string;
 };
 
+export type UserRegisterRequest = Pick<
+  User,
+  "username" | "firstName" | "lastName"
+> & {
+  password: string;
+};
+
 export type ActivityFollowResponse = {
   user: UserResponse;
 } & DateTimeProp;

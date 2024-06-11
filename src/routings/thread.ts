@@ -84,4 +84,22 @@ export function ThreadRouting(server: Router) {
     const threadResponses = await ThreadRepo.getActivityReplies(currentUserId);
     res.json(threadResponses);
   });
+
+  // 2.9. Search Posts by text
+  server.get("/threads/search/:text", async (req, res) => {
+    const currentUserId = Number(req.get("currentUserId"));
+    const searchText = req.params.text;
+    const threadResponses = await ThreadRepo.getThreadsByText(
+      currentUserId,
+      searchText
+    );
+    res.json(threadResponses);
+  });
+
+  // 2.10. Delete a Thread
+  server.delete("/thread/delete/:threadId", async (req, res) => {
+    const threadId = Number(req.params.threadId);
+    await ThreadRepo.deleteThreadById(threadId);
+    res.sendStatus(204);
+  });
 }

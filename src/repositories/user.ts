@@ -1,8 +1,9 @@
-import { QueryError, RowDataPacket } from "mysql2";
+import { QueryError, ResultSetHeader, RowDataPacket } from "mysql2";
 import db from "../database/connection";
 import {
   ActivityFollowResponse,
   UserLoginRequest,
+  UserRegisterRequest,
   UserResponse,
 } from "../types/user";
 import { CommonUtils } from "../utils";
@@ -19,7 +20,7 @@ export class UserRepo {
           const userData = (
             await db.query<RowDataPacket[]>(
               ` SELECT user.user_id, user.username, user.first_name, user.last_name, image.url, user_follow.current_id FROM user
-                LEFT JOIN image ON image.image_id = user.user_id
+                LEFT JOIN image ON image.image_id = user.image_id
                 LEFT JOIN user_follow ON user_follow.current_id = ? AND user_follow.target_id = ?
                 WHERE user.user_id = ?;`,
               [currentUserId, targetUserId, targetUserId]
@@ -187,5 +188,24 @@ export class UserRepo {
     }
 
     return activityFollows;
+  }
+
+  // 1.6. Create new account
+  static async createNewAccount({
+    firstName,
+    lastName,
+    password,
+    username,
+  }: UserRegisterRequest): Promise<number> {
+    try {
+      const result = await db.query<ResultSetHeader>(
+        "INSERT INTO user (username, first_name, last_name, password, image_id) VALUES (?, ?, ?, ?, 1)",
+        [username, firstName, lastName, password]
+      );
+      return result[0].insertId;
+    } catch (error) {
+      console.log(error);
+    }
+    return 0;
   }
 }
