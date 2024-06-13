@@ -5,7 +5,9 @@ export type UserEntity = DateTimeEntity & {
   username: string;
   first_name: string;
   last_name: string;
+  email: string;
   password: string;
+  bio: string | null;
   image_id: number;
 };
 
@@ -29,6 +31,8 @@ export type User = {
   username: string;
   firstName: string;
   lastName: string;
+  email: string;
+  bio: string | null;
   imageUrl: string;
 };
 
@@ -44,13 +48,13 @@ export type UserResponse = {
   overview: UserOverview;
 };
 
-export type UserLoginRequest = Pick<User, "username"> & {
+export type UserLoginRequest = Pick<User, "email"> & {
   password: string;
 };
 
 export type UserRegisterRequest = Pick<
   User,
-  "username" | "firstName" | "lastName"
+  "username" | "firstName" | "lastName" | "email"
 > & {
   password: string;
 };

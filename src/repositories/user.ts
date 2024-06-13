@@ -19,7 +19,7 @@ export class UserRepo {
         (async () => {
           const userData = (
             await db.query<RowDataPacket[]>(
-              ` SELECT user.user_id, user.username, user.first_name, user.last_name, image.url, user_follow.current_id FROM user
+              ` SELECT user.user_id, user.username, user.first_name, user.last_name, user.email, user.bio, image.url, user_follow.current_id FROM user
                 LEFT JOIN image ON image.image_id = user.image_id
                 LEFT JOIN user_follow ON user_follow.current_id = ? AND user_follow.target_id = ?
                 WHERE user.user_id = ?;`,
@@ -30,6 +30,8 @@ export class UserRepo {
             username: string;
             first_name: string;
             last_name: string;
+            email: string;
+            bio: string | null;
             url: string;
             current_id: number | null;
           }[];
@@ -54,6 +56,8 @@ export class UserRepo {
             username: user.username,
             firstName: user.first_name,
             lastName: user.last_name,
+            email: user.email,
+            bio: user.bio,
             imageUrl: user.url,
           },
           overview: {
@@ -71,7 +75,7 @@ export class UserRepo {
     return null;
   }
 
-  // 1.2. Authenticate an User by `username` & `password`
+  // 1.2. Authenticate an User by `email` & `password`
   static async userLoginAuthentication(
     request: UserLoginRequest
   ): Promise<number | null> {
@@ -81,11 +85,11 @@ export class UserRepo {
 
     const sql = `
       SELECT user.user_id FROM user
-      WHERE user.username = ? AND user.password = ?
+      WHERE user.email = ? AND user.password = ?
     `;
 
     try {
-      const data = await db.query(sql, [request.username, request.password]);
+      const data = await db.query(sql, [request.email, request.password]);
       const results = data[0] as ResultType[];
 
       if (results.length != 0) {
@@ -194,13 +198,14 @@ export class UserRepo {
   static async createNewAccount({
     firstName,
     lastName,
+    email,
     password,
     username,
   }: UserRegisterRequest): Promise<number> {
     try {
       const result = await db.query<ResultSetHeader>(
-        "INSERT INTO user (username, first_name, last_name, password, image_id) VALUES (?, ?, ?, ?, 1)",
-        [username, firstName, lastName, password]
+        "INSERT INTO user (username, first_name, last_name, email, password, image_id) VALUES (?, ?, ?, ?, ?,1)",
+        [username, firstName, lastName, email, password]
       );
       return result[0].insertId;
     } catch (error) {
