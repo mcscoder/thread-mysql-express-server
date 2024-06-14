@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { UserLoginRequest, UserRegisterRequest } from "../types/user";
+import {
+  UpdateProfileRequest,
+  UserLoginRequest,
+  UserRegisterRequest,
+} from "../types/user";
 import { UserRepo } from "../repositories";
 
 export function UserRouting(server: Router) {
@@ -70,6 +74,23 @@ export function UserRouting(server: Router) {
       res.json(userId);
     } else {
       res.sendStatus(401);
+    }
+  });
+
+  // 1.7. Update User profile
+  server.post("/user/profile", async (req, res) => {
+    const currentUserId = Number(req.get("currentUserId"));
+    const request: UpdateProfileRequest = req.body;
+
+    const isSuccessful = await UserRepo.updateUserProfile(
+      currentUserId,
+      request
+    );
+
+    if (isSuccessful) {
+      res.sendStatus(200);
+    } else {
+      res.sendStatus(400);
     }
   });
 }

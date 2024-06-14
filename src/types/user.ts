@@ -7,7 +7,7 @@ export type UserEntity = DateTimeEntity & {
   last_name: string;
   email: string;
   password: string;
-  bio: string | null;
+  bio: string;
   image_id: number;
 };
 
@@ -32,7 +32,7 @@ export type User = {
   firstName: string;
   lastName: string;
   email: string;
-  bio: string | null;
+  bio: string;
   imageUrl: string;
 };
 
@@ -62,3 +62,5 @@ export type UserRegisterRequest = Pick<
 export type ActivityFollowResponse = {
   user: UserResponse;
 } & DateTimeProp;
+
+export type UpdateProfileRequest = Pick<User, "firstName" | "lastName" | "bio">;

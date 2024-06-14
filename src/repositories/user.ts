@@ -2,6 +2,7 @@ import { QueryError, ResultSetHeader, RowDataPacket } from "mysql2";
 import db from "../database/connection";
 import {
   ActivityFollowResponse,
+  UpdateProfileRequest,
   UserLoginRequest,
   UserRegisterRequest,
   UserResponse,
@@ -31,7 +32,7 @@ export class UserRepo {
             first_name: string;
             last_name: string;
             email: string;
-            bio: string | null;
+            bio: string;
             url: string;
             current_id: number | null;
           }[];
@@ -204,13 +205,30 @@ export class UserRepo {
   }: UserRegisterRequest): Promise<number> {
     try {
       const result = await db.query<ResultSetHeader>(
-        "INSERT INTO user (username, first_name, last_name, email, password, image_id) VALUES (?, ?, ?, ?, ?,1)",
-        [username, firstName, lastName, email, password]
+        "INSERT INTO user (username, first_name, last_name, email, password, bio, image_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [username, firstName, lastName, email, password, "", 1]
       );
       return result[0].insertId;
     } catch (error) {
       console.log(error);
     }
     return 0;
+  }
+
+  // 1.7. Update User profile
+  static async updateUserProfile(
+    currentUserId: number,
+    request: UpdateProfileRequest
+  ): Promise<boolean> {
+    try {
+      await db.query<ResultSetHeader>(
+        "UPDATE user SET first_name = ?, last_name = ?, bio = ? WHERE user_id = ?",
+        [request.firstName, request.lastName, request.bio, currentUserId]
+      );
+      return true;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
   }
 }
