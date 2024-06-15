@@ -8,6 +8,7 @@ import {
   UserResponse,
 } from "../types/user";
 import { CommonUtils } from "../utils";
+import { ImageRepo } from "./image";
 
 export class UserRepo {
   // 1.1. Get an User by `user_id`
@@ -228,6 +229,38 @@ export class UserRepo {
       return true;
     } catch (error) {
       console.log(error);
+      return false;
+    }
+  }
+
+  // 1.8. Update User image
+  static async updateUserImage(
+    currentUserId: number,
+    imageUrl: string
+  ): Promise<boolean> {
+    try {
+      const imageId = (await ImageRepo.insertImage([imageUrl]))[0];
+      await db.query<ResultSetHeader>(
+        "UPDATE user SET image_id = ? WHERE user_id = ?",
+        [imageId, currentUserId]
+      );
+      return true;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  }
+
+  // 1.9. Remove current User avatar
+  static async removeUserImage(currentUserId: number): Promise<boolean> {
+    try {
+      // Remove current avatar or set it to default
+      await db.query<ResultSetHeader>(
+        "UPDATE user SET image_id = 1 WHERE user_id = ?",
+        [currentUserId]
+      );
+      return true;
+    } catch (error) {
       return false;
     }
   }

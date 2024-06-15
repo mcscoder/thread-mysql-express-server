@@ -93,4 +93,32 @@ export function UserRouting(server: Router) {
       res.sendStatus(400);
     }
   });
+
+  // 1.8. Update User avatar
+  server.patch("/user/profile/image", async (req, res) => {
+    const currentUserId = Number(req.get("currentUserId"));
+    const imageUrl: string = req.body.imageUrl;
+    const isSuccessful = await UserRepo.updateUserImage(
+      currentUserId,
+      imageUrl
+    );
+
+    if (isSuccessful) {
+      res.sendStatus(200);
+    } else {
+      res.sendStatus(400);
+    }
+  });
+
+  // 1.9. Remove current User avatar
+  server.delete("/user/profile/image", async (req, res) => {
+    const currentUserId = Number(req.get("currentUserId"));
+    const isSuccessful = await UserRepo.removeUserImage(currentUserId);
+
+    if (isSuccessful) {
+      res.sendStatus(200);
+    } else {
+      res.sendStatus(400);
+    }
+  });
 }
