@@ -264,4 +264,18 @@ export class UserRepo {
       return false;
     }
   }
+
+  // 1.10. Check if email exists
+  static async isEmailExists(email: string): Promise<boolean> {
+    try {
+      const [rows] = await db.query<RowDataPacket[]>(
+        "SELECT 1 FROM user WHERE email = ? LIMIT 1",
+        [email]
+      );
+      return rows.length > 0;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  }
 }

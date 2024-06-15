@@ -121,4 +121,16 @@ export function UserRouting(server: Router) {
       res.sendStatus(400);
     }
   });
+
+  // 1.10. Check if email exists
+  server.get("/user/exist/:email", async (req, res) => {
+    const email = req.params.email;
+    const isEmailExist = await UserRepo.isEmailExists(email);
+
+    if (isEmailExist) {
+      res.sendStatus(200);
+    } else {
+      res.sendStatus(404);
+    }
+  });
 }
