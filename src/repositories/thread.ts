@@ -264,6 +264,9 @@ export class ThreadRepo {
     } catch (error) {
       console.log(error);
     }
+    threadResponses.sort(
+      (a, b) => b.content.dateTime.createdAt - a.content.dateTime.createdAt
+    );
 
     return threadResponses;
   }
@@ -438,5 +441,72 @@ export class ThreadRepo {
     } catch (error) {
       console.log(error);
     }
+  }
+
+  // 2.11. Save or unsave a Thread
+  static async saveThreadById(currentUserId: number, threadId: number) {
+    try {
+      await db.query(
+        "INSERT INTO user_saved_thread (user_id, thread_id) VALUES (?, ?)",
+        [currentUserId, threadId]
+      );
+    } catch (error) {
+      await db.query(
+        "DELETE FROM user_saved_thread WHERE user_id = ? AND thread_id = ?",
+        [currentUserId, threadId]
+      );
+    }
+  }
+
+  // 2.12. Get saved Threads
+  static async getSavedThreads(
+    currentUserId: number
+  ): Promise<ThreadResponse[]> {
+    const threadResponses: ThreadResponse[] = [];
+
+    try {
+      const threadIds = (
+        await db.query<RowDataPacket[]>(
+          "SELECT thread_id FROM user_saved_thread WHERE user_id = ?",
+          [currentUserId]
+        )
+      )[0] as { thread_id: number }[];
+      await Promise.all(
+        threadIds.map(async ({ thread_id }) => {
+          const thread = await this.getThreadById(currentUserId, thread_id);
+          threadResponses.push(thread!);
+        })
+      );
+    } catch (error) {
+      console.log(error);
+    }
+
+    return threadResponses;
+  }
+
+  // 2.13. Get favorited Threads
+  static async getFavoritedThreads(
+    currentUserId: number
+  ): Promise<ThreadResponse[]> {
+    const threadResponses: ThreadResponse[] = [];
+
+    try {
+      const threadIds = (
+        await db.query<RowDataPacket[]>(
+          "SELECT thread_id FROM user_favorite_thread WHERE user_id = ?",
+          [currentUserId]
+        )
+      )[0] as { thread_id: number }[];
+      await Promise.all(
+        threadIds.map(async ({ thread_id }) => {
+          const thread = await this.getThreadById(currentUserId, thread_id);
+          threadResponses.push(thread!);
+        })
+      );
+    } catch (error) {
+      console.log(error);
+    }
+
+    return threadResponses;
   }
 }

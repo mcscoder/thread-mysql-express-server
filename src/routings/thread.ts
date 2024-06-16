@@ -102,4 +102,26 @@ export function ThreadRouting(server: Router) {
     await ThreadRepo.deleteThreadById(threadId);
     res.sendStatus(204);
   });
+
+  // 2.11. Save or unsave a Thread
+  server.post("/thread/save/:threadId", async (req, res) => {
+    const currentUserId = Number(req.get("currentUserId"));
+    const threadId = Number(req.params.threadId);
+    await ThreadRepo.saveThreadById(currentUserId, threadId);
+    res.sendStatus(200);
+  });
+
+  // 2.12. Get saved Threads
+  server.get("/threads/saved", async (req, res) => {
+    const currentUserId = Number(req.get("currentUserId"));
+    const threads = await ThreadRepo.getSavedThreads(currentUserId);
+    res.json(threads);
+  });
+
+  // 2.13. Get favorited Threads
+  server.get("/threads/favorited", async (req, res) => {
+    const currentUserId = Number(req.get("currentUserId"));
+    const threads = await ThreadRepo.getFavoritedThreads(currentUserId);
+    res.json(threads);
+  });
 }
