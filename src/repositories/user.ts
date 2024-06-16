@@ -278,4 +278,19 @@ export class UserRepo {
       return false;
     }
   }
+
+  // 1.11. Update new password
+  static async updateNewPassword(request: UserLoginRequest) {
+    try {
+      const result = await db.query<ResultSetHeader>(
+        "UPDATE user SET password = ? WHERE email = ?",
+        [request.password, request.email]
+      );
+      return result[0].insertId;
+    } catch (error) {
+      console.log(error);
+    }
+
+    return 0;
+  }
 }

@@ -1,10 +1,10 @@
 import { Router } from "express";
+import { UserRepo } from "../repositories";
 import {
   UpdateProfileRequest,
   UserLoginRequest,
   UserRegisterRequest,
 } from "../types/user";
-import { UserRepo } from "../repositories";
 
 export function UserRouting(server: Router) {
   // 1.2. Get User by user_id
@@ -132,5 +132,12 @@ export function UserRouting(server: Router) {
     } else {
       res.sendStatus(404);
     }
+  });
+
+  // 1.11. Update new password
+  server.patch("/user/password/renew", async (req, res) => {
+    const request: UserLoginRequest = req.body;
+    await UserRepo.updateNewPassword(request);
+    res.sendStatus(200);
   });
 }
