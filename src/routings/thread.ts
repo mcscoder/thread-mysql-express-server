@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { ThreadRepo } from "../repositories";
-import { PostThreadRequest } from "../types/thread";
+import { PostThreadRequest, UpdateThreadRequest } from "../types/thread";
 
 export function ThreadRouting(server: Router) {
   // 2.1. Get a Thread by `thread_id`
@@ -123,5 +123,12 @@ export function ThreadRouting(server: Router) {
     const currentUserId = Number(req.get("currentUserId"));
     const threads = await ThreadRepo.getFavoritedThreads(currentUserId);
     res.json(threads);
+  });
+
+  // 2.14. Update a Thread
+  server.patch("/thread/update", async (req, res) => {
+    const request: UpdateThreadRequest = req.body;
+    await ThreadRepo.updateThread(request);
+    res.sendStatus(200);
   });
 }

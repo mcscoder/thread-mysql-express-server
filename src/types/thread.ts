@@ -59,3 +59,8 @@ export type MainThreadWithReplies = {
   main: ThreadResponse;
   replies: ThreadResponse[];
 };
+
+export type UpdateThreadRequest = Pick<Thread, "threadId" | "text"> & {
+  deletedImageUrls: string[];
+  newImageUrls: string[];
+};

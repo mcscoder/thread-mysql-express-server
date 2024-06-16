@@ -6,6 +6,7 @@ import {
   ThreadContentResponse,
   ThreadResponse,
   ThreadType,
+  UpdateThreadRequest,
 } from "../types/thread";
 import { UserResponse } from "../types/user";
 import { CommonUtils } from "../utils";
@@ -508,5 +509,37 @@ export class ThreadRepo {
     }
 
     return threadResponses;
+  }
+
+  // 2.14. Update a Thread
+  static async updateThread(request: UpdateThreadRequest) {
+    try {
+      await Promise.all([
+        // Update text
+        db.query<ResultSetHeader>(
+          "UPDATE thread SET text = ? WHERE thread_id = ?",
+          [request.text, request.threadId]
+        ),
+        // Update deleted images
+        request.deletedImageUrls.length != 0 &&
+          db.query<ResultSetHeader>(
+            ` DELETE thread_image FROM thread_image
+            INNER JOIN image ON thread_image.image_id = image.image_id
+            WHERE image.url IN (?)`,
+            [request.deletedImageUrls]
+          ),
+        // Update new images
+        (await ImageRepo.insertImage(request.newImageUrls)).map(
+          async (imageId) => {
+            await db.query<ResultSetHeader>(
+              "INSERT INTO thread_image (thread_id, image_id) VALUES (?, ?)",
+              [request.threadId, imageId]
+            );
+          }
+        ),
+      ]);
+    } catch (error) {
+      console.log(error);
+    }
   }
 }
